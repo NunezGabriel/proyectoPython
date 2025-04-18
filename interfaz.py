@@ -6,6 +6,12 @@ from parking import Parking
 
 parking = Parking(10)  # capacidad inicial
 
+def actualizar_lista():
+    lista_vehiculos.delete(0, tk.END)  # Limpiamos la lista
+    for v in parking.obtener_vehiculos():
+        texto = f"{v.placa} - {v.marca} - {v.conductor.nombre}"
+        lista_vehiculos.insert(tk.END, texto)
+
 def registrar_entrada():
     nombre = entry_nombre.get()
     dni = entry_dni.get()
@@ -18,6 +24,7 @@ def registrar_entrada():
     vehiculo = Vehiculo(placa, marca, color, conductor)
     if parking.registrar_ingreso(vehiculo):
         messagebox.showinfo("Éxito", "Vehículo ingresado correctamente")
+        actualizar_lista()
     else:
         messagebox.showerror("Error", "Parking lleno")
 
@@ -27,12 +34,13 @@ def registrar_salida():
     if vehiculo:
         pago = parking.calcular_pago(vehiculo)
         messagebox.showinfo("Salida", f"Pago total: S/ {pago}")
+        actualizar_lista()
     else:
         messagebox.showerror("Error", "Vehículo no encontrado")
 
 ventana = tk.Tk()
 ventana.title("Gestión de Parking Tecsup")
-ventana.geometry("400x500")
+ventana.geometry("400x600")
 ventana.configure(bg="#0f4c81")
 
 tk.Label(ventana, text="Nombre:", bg="#0f4c81", fg="white").pack()
@@ -62,5 +70,10 @@ entry_color.pack()
 
 tk.Button(ventana, text="Registrar Entrada", command=registrar_entrada).pack(pady=10)
 tk.Button(ventana, text="Registrar Salida", command=registrar_salida).pack(pady=10)
+
+# Lista de vehículos en el parking
+tk.Label(ventana, text="Vehículos en el Parking:", bg="#0f4c81", fg="white").pack(pady=(20,5))
+lista_vehiculos = tk.Listbox(ventana, width=50)
+lista_vehiculos.pack(pady=5)
 
 ventana.mainloop()
