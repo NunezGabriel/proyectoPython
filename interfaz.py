@@ -4,76 +4,105 @@ from vehiculo import Vehiculo
 from conductor import Conductor
 from parking import Parking
 
-parking = Parking(10)  # capacidad inicial
+parking = Parking(10)  # capacidad del parking
 
-def actualizar_lista():
-    lista_vehiculos.delete(0, tk.END)  # Limpiamos la lista
-    for v in parking.obtener_vehiculos():
-        texto = f"{v.placa} - {v.marca} - {v.conductor.nombre}"
-        lista_vehiculos.insert(tk.END, texto)
+def lanzar_app():
+    ventana = tk.Tk()  # <-- ESTO FALTABA (creamos la ventana principal)
 
-def registrar_entrada():
-    nombre = entry_nombre.get()
-    dni = entry_dni.get()
-    tipo = tipo_var.get()
-    placa = entry_placa.get()
-    marca = entry_marca.get()
-    color = entry_color.get()
+    def mostrar_menu():
+        limpiar_ventana()
+        tk.Label(ventana, text="Tecsup Parking", font=("Helvetica", 18, "bold"), bg="#0f4c81", fg="white").pack(pady=30)
 
-    conductor = Conductor(nombre, dni, tipo)
-    vehiculo = Vehiculo(placa, marca, color, conductor)
-    if parking.registrar_ingreso(vehiculo):
-        messagebox.showinfo("Éxito", "Vehículo ingresado correctamente")
-        actualizar_lista()
-    else:
-        messagebox.showerror("Error", "Parking lleno")
+        tk.Button(ventana, text="Registrar Entrada", command=mostrar_entrada, width=20, height=2, bg="white").pack(pady=10)
+        tk.Button(ventana, text="Registrar Salida", command=mostrar_salida, width=20, height=2, bg="white").pack(pady=10)
+    def mostrar_entrada():
+        limpiar_ventana()
 
-def registrar_salida():
-    placa = entry_placa.get()
-    vehiculo = parking.registrar_salida(placa)
-    if vehiculo:
-        pago = parking.calcular_pago(vehiculo)
-        messagebox.showinfo("Salida", f"Pago total: S/ {pago}")
-        actualizar_lista()
-    else:
-        messagebox.showerror("Error", "Vehículo no encontrado")
+        tk.Label(ventana, text="Registro de Entrada", font=("Helvetica", 14, "bold"), bg="#0f4c81", fg="white").pack(pady=10)
 
-ventana = tk.Tk()
-ventana.title("Gestión de Parking Tecsup")
-ventana.geometry("400x600")
-ventana.configure(bg="#0f4c81")
+        # Formulario
+        for text in ["Nombre:", "DNI:", "Placa:", "Marca:", "Color:"]:
+            tk.Label(ventana, text=text, bg="#0f4c81", fg="white").pack()
+        
+        nombre = tk.Entry(ventana); nombre.pack()
+        dni = tk.Entry(ventana); dni.pack()
 
-tk.Label(ventana, text="Nombre:", bg="#0f4c81", fg="white").pack()
-entry_nombre = tk.Entry(ventana)
-entry_nombre.pack()
+        tk.Label(ventana, text="Tipo:", bg="#0f4c81", fg="white").pack()
+        tipo_var = tk.StringVar(value="estudiante")
+        tk.Radiobutton(ventana, text="Estudiante", variable=tipo_var, value="estudiante").pack()
+        tk.Radiobutton(ventana, text="Profesor", variable=tipo_var, value="profesor").pack()
 
-tk.Label(ventana, text="DNI:", bg="#0f4c81", fg="white").pack()
-entry_dni = tk.Entry(ventana)
-entry_dni.pack()
+        placa = tk.Entry(ventana); placa.pack()
+        marca = tk.Entry(ventana); marca.pack()
+        color = tk.Entry(ventana); color.pack()
 
-tk.Label(ventana, text="Tipo:", bg="#0f4c81", fg="white").pack()
-tipo_var = tk.StringVar(value="estudiante")
-tk.Radiobutton(ventana, text="Estudiante", variable=tipo_var, value="estudiante").pack()
-tk.Radiobutton(ventana, text="Profesor", variable=tipo_var, value="profesor").pack()
+        def registrar():
+            conductor = Conductor(nombre.get(), dni.get(), tipo_var.get())
+            vehiculo = Vehiculo(placa.get(), marca.get(), color.get(), conductor)
+            if parking.registrar_ingreso(vehiculo):
+                messagebox.showinfo("Éxito", "Vehículo ingresado")
+                actualizar_lista(lista)
+                actualizar_estado()
+            else:
+                messagebox.showerror("Error", "Parking lleno")
 
-tk.Label(ventana, text="Placa:", bg="#0f4c81", fg="white").pack()
-entry_placa = tk.Entry(ventana)
-entry_placa.pack()
+        tk.Button(ventana, text="Registrar", command=registrar, bg="white").pack(pady=10)
+        tk.Button(ventana, text="Volver al menú", command=mostrar_menu, bg="white").pack(pady=5)
 
-tk.Label(ventana, text="Marca:", bg="#0f4c81", fg="white").pack()
-entry_marca = tk.Entry(ventana)
-entry_marca.pack()
+        # Lista de vehículos
+        tk.Label(ventana, text="Vehículos en Parking:", bg="#0f4c81", fg="white").pack(pady=5)
+        lista = tk.Listbox(ventana, width=50); lista.pack()
+        actualizar_lista(lista)
 
-tk.Label(ventana, text="Color:", bg="#0f4c81", fg="white").pack()
-entry_color = tk.Entry(ventana)
-entry_color.pack()
+        estado_label = tk.Label(ventana, bg="#0f4c81", fg="white")
+        estado_label.pack(pady=5)
+        def actualizar_estado():
+            estado_label.config(text=f"Espacio disponible: {parking.capacidad_actual()} / {parking.capacidad}")
+        actualizar_estado()
 
-tk.Button(ventana, text="Registrar Entrada", command=registrar_entrada).pack(pady=10)
-tk.Button(ventana, text="Registrar Salida", command=registrar_salida).pack(pady=10)
+    def mostrar_salida():
+        limpiar_ventana()
 
-# Lista de vehículos en el parking
-tk.Label(ventana, text="Vehículos en el Parking:", bg="#0f4c81", fg="white").pack(pady=(20,5))
-lista_vehiculos = tk.Listbox(ventana, width=50)
-lista_vehiculos.pack(pady=5)
+        tk.Label(ventana, text="Registro de Salida", font=("Helvetica", 14, "bold"), bg="#0f4c81", fg="white").pack(pady=10)
 
-ventana.mainloop()
+        tk.Label(ventana, text="Placa del vehículo:", bg="#0f4c81", fg="white").pack()
+        placa = tk.Entry(ventana); placa.pack()
+
+        def registrar_salida():
+            vehiculo = parking.registrar_salida(placa.get())
+            if vehiculo:
+                pago = parking.calcular_pago(vehiculo)
+                messagebox.showinfo("Salida", f"Pago: S/ {pago}")
+                actualizar_lista(lista)
+                actualizar_estado()
+            else:
+                messagebox.showerror("Error", "Vehículo no encontrado")
+
+        tk.Button(ventana, text="Registrar Salida", command=registrar_salida, bg="white").pack(pady=10)
+        tk.Button(ventana, text="Volver al menú", command=mostrar_menu, bg="white").pack()
+
+        # Lista de vehículos actuales
+        tk.Label(ventana, text="Vehículos en Parking:", bg="#0f4c81", fg="white").pack(pady=5)
+        lista = tk.Listbox(ventana, width=50); lista.pack()
+        actualizar_lista(lista)
+
+        estado_label = tk.Label(ventana, bg="#0f4c81", fg="white")
+        estado_label.pack(pady=5)
+        def actualizar_estado():
+            estado_label.config(text=f"Espacio disponible: {parking.capacidad_actual()} / {parking.capacidad}")
+        actualizar_estado()
+
+    def actualizar_lista(listbox):
+        listbox.delete(0, tk.END)
+        for v in parking.obtener_vehiculos():
+            listbox.insert(tk.END, f"{v.placa} - {v.marca} - {v.conductor.nombre}")
+
+    def limpiar_ventana():
+        for widget in ventana.winfo_children():
+            widget.destroy()
+
+    ventana.title("Tecsup Parking")
+    ventana.geometry("420x600")
+    ventana.configure(bg="#0f4c81")
+    mostrar_menu()
+    ventana.mainloop()
