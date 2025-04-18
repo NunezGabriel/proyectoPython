@@ -78,8 +78,7 @@ def lanzar_app():
         estado_label.pack(pady=5)
         
         def actualizar_estado():
-            estado_label.config(text=f"Espacio disponible: {parking.capacidad_actual()} / {parking.capacidad}")
-        
+            estado_label.config(text=f"Vehiculos en el parking: {parking.ocupados} / {parking.capacidad}")
         actualizar_estado()
 
     def mostrar_salida():
@@ -110,8 +109,9 @@ def lanzar_app():
 
         estado_label = tk.Label(ventana, bg="#0f4c81", fg="white")
         estado_label.pack(pady=5)
+
         def actualizar_estado():
-            estado_label.config(text=f"Espacio disponible: {parking.capacidad_actual()} / {parking.capacidad}")
+            estado_label.config(text=f"Vehiculos en el parking: {parking.ocupados} / {parking.capacidad}")
         actualizar_estado()
 
     def actualizar_lista(listbox):
