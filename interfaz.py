@@ -114,10 +114,21 @@ def lanzar_app():
             estado_label.config(text=f"Vehiculos en el parking: {parking.ocupados} / {parking.capacidad}")
         actualizar_estado()
 
-    def actualizar_lista(listbox):
-        listbox.delete(0, tk.END)
-        for v in parking.obtener_vehiculos():
-            listbox.insert(tk.END, f"{v.placa} - {v.marca} - {v.conductor.nombre}")
+    def actualizar_lista(frame_lista):
+        for widget in frame_lista.winfo_children():
+            widget.destroy()
+
+        encabezados = ["Placa", "Marca", "Color", "Propietario", "DNI"]
+        for col, texto in enumerate(encabezados):
+            tk.Label(frame_lista, text=texto, font=("Helvetica", 10, "bold")).grid(row=0, column=col, padx=5, pady=5)
+
+        for i, v in enumerate(parking.obtener_vehiculos()):
+            tk.Label(frame_lista, text=v.placa).grid(row=i+1, column=0)
+            tk.Label(frame_lista, text=v.marca).grid(row=i+1, column=1)
+            tk.Label(frame_lista, text=v.color).grid(row=i+1, column=2)
+            tk.Label(frame_lista, text=v.conductor.nombre).grid(row=i+1, column=3)
+            tk.Label(frame_lista, text=v.conductor.dni).grid(row=i+1, column=4)
+
 
     def limpiar_ventana():
         for widget in ventana.winfo_children():
