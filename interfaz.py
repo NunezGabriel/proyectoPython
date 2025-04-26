@@ -7,7 +7,7 @@ from parking import Parking
 parking = Parking(10)  # capacidad del parking
 
 def lanzar_app():
-    ventana = tk.Tk()  # <-- ESTO FALTABA (creamos la ventana principal)
+    ventana = tk.Tk()  
 
     def mostrar_menu():
         limpiar_ventana()
@@ -19,14 +19,13 @@ def lanzar_app():
     def mostrar_entrada():
         limpiar_ventana()
 
-        # Título principal
         tk.Label(ventana, text="Registro de Entrada", font=("Helvetica", 14, "bold"), bg="#0f4c81", fg="white").pack(pady=10)
 
         # Frame principal para el formulario
         form_frame = tk.Frame(ventana, bg="#0f4c81")
         form_frame.pack(padx=20, pady=5)
 
-        # Etiquetas y campos alineados con grid
+
         etiquetas = ["Nombre:", "DNI:", "Placa:", "Marca:", "Color:"]
         entradas = []
         

@@ -30,7 +30,7 @@ class Parking:
         if vehiculo.conductor.tipo == "profesor":
             return 0
         tiempo = (vehiculo.hora_salida - vehiculo.hora_entrada) / 60  # minutos
-        return round(tiempo * 0.5, 2)  # 0.5 soles por minuto (ejemplo)
+        return round(tiempo * 0.5, 2)  # 0.5 soles por minuto 
 
     def obtener_vehiculos(self):
         return self.vehiculos.listar()
