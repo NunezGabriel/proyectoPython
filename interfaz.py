@@ -428,44 +428,153 @@ class TecsupParkingApp:
         root.geometry("1000x650")  # Tamaño inicial recomendado
     
     def crear_tabla_reportes(self):
-        # Frame principal
-        main_frame = ttk.Frame(self.tab_reportes)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Frame principal con nuevo estilo
+        main_frame = ttk.Frame(self.tab_reportes, style="Card.TFrame")
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        ttk.Label(main_frame, text="Reporte de Vehículos", style="Header.TLabel").pack(pady=10)
+        # Título principal con nuevo estilo
+        ttk.Label(main_frame, 
+                text="Reporte de Vehículos", 
+                style="Header.TLabel",
+                font=('Helvetica', 18, 'bold')).pack(pady=(0, 15))
         
-        # Estado del parking
-        estado_frame = ttk.Frame(main_frame)
-        estado_frame.pack(pady=10, fill=tk.X)
+        # Panel de estado con nuevo diseño
+        estado_frame = ttk.Frame(main_frame, style="Card.TFrame", padding=10)
+        estado_frame.pack(fill=tk.X, pady=(0, 15))
         
-        ttk.Label(estado_frame, text="Capacidad Actual:", style="Header.TLabel").grid(row=0, columnspan=3)
+        ttk.Label(estado_frame, 
+                text="Capacidad Actual", 
+                style="FormHeader.TLabel",
+                font=('Helvetica', 12, 'bold')).pack(anchor="w")
         
-        self.lbl_autos = ttk.Label(estado_frame, text="Autos: -/-")
-        self.lbl_autos.grid(row=1, column=0, padx=10)
+        # Contenedor para los indicadores
+        indicators_frame = ttk.Frame(estado_frame)
+        indicators_frame.pack(fill=tk.X, pady=5)
         
-        self.lbl_motos = ttk.Label(estado_frame, text="Motos: -/-")
-        self.lbl_motos.grid(row=1, column=1, padx=10)
+        # Estilo para los indicadores
+        self.style.configure("Indicator.TLabel", 
+                            font=('Helvetica', 10, 'bold'),
+                            padding=5)
         
-        self.lbl_bicis = ttk.Label(estado_frame, text="Bicicletas: -/-")
-        self.lbl_bicis.grid(row=1, column=2, padx=10)
+        # Indicador para Autos
+        auto_frame = ttk.Frame(indicators_frame, style="Card.TFrame", padding=5)
+        auto_frame.pack(side="left", padx=5, pady=5, fill=tk.X, expand=True)
+        ttk.Label(auto_frame, text="🚗 Autos", style="Indicator.TLabel").pack()
+        self.lbl_autos = ttk.Label(auto_frame, 
+                                text="0/20", 
+                                font=('Helvetica', 12),
+                                foreground="#333333")
+        self.lbl_autos.pack()
         
-        # Tabla de vehículos
+        # Indicador para Motos
+        moto_frame = ttk.Frame(indicators_frame, style="Card.TFrame", padding=5)
+        moto_frame.pack(side="left", padx=5, pady=5, fill=tk.X, expand=True)
+        ttk.Label(moto_frame, text="🏍️ Motos", style="Indicator.TLabel").pack()
+        self.lbl_motos = ttk.Label(moto_frame, 
+                                text="0/30", 
+                                font=('Helvetica', 12),
+                                foreground="#333333")
+        self.lbl_motos.pack()
+        
+        # Indicador para Bicicletas
+        bici_frame = ttk.Frame(indicators_frame, style="Card.TFrame", padding=5)
+        bici_frame.pack(side="left", padx=5, pady=5, fill=tk.X, expand=True)
+        ttk.Label(bici_frame, text="🚲 Bicicletas", style="Indicator.TLabel").pack()
+        self.lbl_bicis = ttk.Label(bici_frame, 
+                                text="0/50", 
+                                font=('Helvetica', 12),
+                                foreground="#333333")
+        self.lbl_bicis.pack()
+        
+        # Configurar estilo para la tabla
+        self.style.configure("Treeview",
+                            background="#ffffff",
+                            foreground="#333333",
+                            rowheight=28,
+                            fieldbackground="#ffffff",
+                            borderwidth=0)
+        
+        self.style.configure("Treeview.Heading",
+                            background="#3e1ad9",
+                            foreground="white",
+                            font=('Helvetica', 10, 'bold'),
+                            padding=5,
+                            relief="flat")
+        
+        self.style.map("Treeview.Heading",
+                    background=[('active', '#5a36e0')])
+        
+        self.style.map("Treeview",
+                    background=[('selected', '#3e1ad9')],
+                    foreground=[('selected', 'white')])
+        
+        # Frame para la tabla con scroll
+        table_frame = ttk.Frame(main_frame)
+        table_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        
+        # Scrollbars
+        vsb = ttk.Scrollbar(table_frame, orient="vertical")
+        hsb = ttk.Scrollbar(table_frame, orient="horizontal")
+        
+        # Configurar Treeview
         columns = ("Placa", "Tipo", "Marca", "Color", "Conductor", "DNI", "Tipo Usuario", "Hora Entrada")
-        self.tree_reportes = ttk.Treeview(main_frame, columns=columns, show="headings", height=15)
+        self.tree_reportes = ttk.Treeview(table_frame, 
+                                        columns=columns, 
+                                        show="headings", 
+                                        height=12,
+                                        style="Treeview",
+                                        yscrollcommand=vsb.set,
+                                        xscrollcommand=hsb.set)
+        
+        # Configurar columnas
+        col_widths = {
+            "Placa": 100,
+            "Tipo": 80,
+            "Marca": 100,
+            "Color": 80,
+            "Conductor": 120,
+            "DNI": 100,
+            "Tipo Usuario": 100,
+            "Hora Entrada": 100
+        }
         
         for col in columns:
             self.tree_reportes.heading(col, text=col)
-            self.tree_reportes.column(col, width=120, anchor="center")
+            self.tree_reportes.column(col, width=col_widths.get(col, 100), anchor="center")
         
-        self.tree_reportes.pack(fill=tk.BOTH, expand=True, pady=10)
+        # Empacar scrollbars y tabla
+        vsb.pack(side="right", fill="y")
+        hsb.pack(side="bottom", fill="x")
+        self.tree_reportes.pack(side="left", fill="both", expand=True)
         
-        # Botón de actualizar
-        ttk.Button(main_frame, text="Actualizar Reportes", 
-                  command=self.actualizar_reportes).pack(pady=10)
+        vsb.config(command=self.tree_reportes.yview)
+        hsb.config(command=self.tree_reportes.xview)
         
-        # Botón de volver
-        ttk.Button(main_frame, text="Volver al Menú", 
-                  command=lambda: self.notebook.select(self.tab_menu)).pack()
+        # Panel de botones
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill=tk.X, pady=(5, 0))
+        
+        # Botón de actualizar con nuevo estilo
+        ttk.Button(button_frame, 
+                text="🔄 Actualizar Reportes", 
+                style="Accent.TButton",
+                command=self.actualizar_reportes).pack(side="left", padx=5)
+        
+        # Botón de volver con nuevo estilo
+        ttk.Button(button_frame, 
+                text="← Volver al Menú", 
+                style="TButton",
+                command=lambda: self.notebook.select(self.tab_menu)).pack(side="right", padx=5)
+        
+        # Configurar estilos adicionales para los botones
+        self.style.configure("Accent.TButton",
+                            background="#3e1ad9",
+                            foreground="white",
+                            font=('Helvetica', 10, 'bold'),
+                            padding=8)
+        
+        self.style.map("Accent.TButton",
+                    background=[('active', '#5a36e0'), ('pressed', '#2a0d9c')])
         
         # Actualizar reportes inicial
         self.actualizar_reportes()
