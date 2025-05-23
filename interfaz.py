@@ -72,6 +72,8 @@ class TecsupParkingApp:
         self.lbl_bicis = None
         
         self.crear_interfaz()
+
+
     
     def crear_interfaz(self):
         # Notebook (pestañas)
@@ -107,41 +109,85 @@ class TecsupParkingApp:
         self.notebook.select(self.tab_menu)
     
     def crear_menu_principal(self):
-        # Encabezado
-        ttk.Label(self.tab_menu, text="Tecsup Parking", style="Header.TLabel").pack(pady=20)
-        
-        # Frame para estado del parking
-        estado_frame = ttk.Frame(self.tab_menu)
-        estado_frame.pack(pady=10)
-        
-        ttk.Label(estado_frame, text="Estado del Parking:", style="Header.TLabel").grid(row=0, columnspan=3)
-        
-        # Inicializar las etiquetas de estado
-        self.lbl_autos = ttk.Label(estado_frame, text="Autos: -/-")
-        self.lbl_autos.grid(row=1, column=0, padx=10)
-        
-        self.lbl_motos = ttk.Label(estado_frame, text="Motos: -/-")
-        self.lbl_motos.grid(row=1, column=1, padx=10)
-        
-        self.lbl_bicis = ttk.Label(estado_frame, text="Bicicletas: -/-")
-        self.lbl_bicis.grid(row=1, column=2, padx=10)
-        
-        # Actualizar estado con los valores reales
-        self.actualizar_estado_parking()
-        
-        # Botones principales
-        btn_frame = ttk.Frame(self.tab_menu)
-        btn_frame.pack(pady=20)
-        
-        ttk.Button(btn_frame, text="Gestión de Autos", 
-                  command=lambda: self.notebook.select(self.tab_autos)).grid(row=0, column=0, padx=10, pady=5)
-        ttk.Button(btn_frame, text="Gestión de Motos", 
-                  command=lambda: self.notebook.select(self.tab_motos)).grid(row=0, column=1, padx=10, pady=5)
-        ttk.Button(btn_frame, text="Gestión de Bicicletas", 
-                  command=lambda: self.notebook.select(self.tab_bicis)).grid(row=1, column=0, padx=10, pady=5)
-        ttk.Button(btn_frame, text="Ver Reportes", 
-                  command=lambda: self.notebook.select(self.tab_reportes)).grid(row=1, column=1, padx=10, pady=5)
-    
+        # Frame principal con nuevo diseño
+        main_frame = ttk.Frame(self.tab_menu, style="TFrame")
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # Título principal
+        ttk.Label(main_frame, 
+                text="Tecsup Parking", 
+                style="Header.TLabel",
+                font=('Helvetica', 24, 'bold')).pack(pady=(0, 30))
+
+        # Contenedor de cards
+        cards_frame = ttk.Frame(main_frame)
+        cards_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Estilo para las cards y etiquetas
+        self.style.configure("Card.TFrame", 
+                            background="#ffffff", 
+                            relief="solid", 
+                            borderwidth=1)
+
+        self.style.configure("CardTitle.TLabel", 
+                            background="#ffffff", 
+                            font=('Helvetica', 13, 'bold'),
+                            foreground="#333333")
+
+        self.style.configure("CardDesc.TLabel", 
+                            background="#ffffff", 
+                            font=('Helvetica', 10),
+                            foreground="#666666",
+                            wraplength=180)
+
+        self.style.configure("Card.TButton", 
+                            background="#33ccff", 
+                            foreground="white", 
+                            font=('Helvetica', 10, 'bold'))
+
+        # Datos de las cards
+        cards_data = [
+            ("Gestión de Autos", "Administra el ingreso y salida de autos del estacionamiento.",
+            lambda: self.notebook.select(self.tab_autos)),
+            ("Gestión de Motos", "Controla las motocicletas que ingresan y salen del recinto.",
+            lambda: self.notebook.select(self.tab_motos)),
+            ("Gestión de Bicicletas", "Gestiona el parqueo de bicicletas con registro y control.",
+            lambda: self.notebook.select(self.tab_bicis)),
+            ("Ver Reportes", "Consulta los reportes de uso del estacionamiento por tipo de vehículo.",
+            lambda: self.notebook.select(self.tab_reportes))
+        ]
+
+        for i, (titulo, desc, comando) in enumerate(cards_data):
+            card = ttk.Frame(cards_frame, style="Card.TFrame", width=200, height=160)
+            card.grid(row=i//2, column=i%2, padx=15, pady=15, sticky="nsew")
+            
+            # Contenido dentro de la card
+            inner = tk.Frame(card, bg="#ffffff")
+            inner.pack(fill='both', expand=True, padx=10, pady=10)
+
+            tk.Label(inner, text=titulo, font=('Helvetica', 12, 'bold'), bg="#ffffff", fg="#333333").pack(anchor="w")
+            tk.Label(inner, text=desc, font=('Helvetica', 9), bg="#ffffff", fg="#777777", wraplength=180, justify='left').pack(anchor="w", pady=(5, 15))
+            
+            tk.Button(inner, text="Acceder", bg="#33ccff", fg="white", font=("Helvetica", 9, 'bold'),
+                    relief='flat', cursor="hand2", command=comando).pack(anchor="e", pady=(10, 0))
+
+        # Estado del parking
+        estado_frame = ttk.Frame(main_frame)
+        estado_frame.pack(pady=(30, 10))
+
+        ttk.Label(estado_frame, 
+                text=f"Autos: {self.parking.ocupados_autos}/{self.parking.capacidad_autos} | "
+                    f"Motos: {self.parking.ocupados_motos}/{self.parking.capacidad_motos} | "
+                    f"Bicicletas: {self.parking.ocupados_bicis}/{self.parking.capacidad_bicis}",
+                font=('Helvetica', 10)).pack()
+
+        # Configurar grid para expansión uniforme
+        cards_frame.grid_columnconfigure(0, weight=1)
+        cards_frame.grid_columnconfigure(1, weight=1)
+        cards_frame.grid_rowconfigure(0, weight=1)
+        cards_frame.grid_rowconfigure(1, weight=1)
+
+             
     def crear_formulario_vehiculo(self, parent, tipo_vehiculo):
         # Frame principal con scroll
         main_frame = ttk.Frame(parent)
