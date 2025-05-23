@@ -18,11 +18,54 @@ class TecsupParkingApp:
         # Estilo
         self.style = ttk.Style()
         self.style.theme_use("clam")
+
+        # Configurar colores y estilos
         self.style.configure("TFrame", background="#f0f0f0")
         self.style.configure("TLabel", background="#f0f0f0", font=('Helvetica', 10))
-        self.style.configure("TButton", font=('Helvetica', 10), padding=5)
-        self.style.configure("Header.TLabel", font=('Helvetica', 14, 'bold'), foreground="#0f4c81")
+        self.style.configure("Header.TLabel", font=('Helvetica', 14, 'bold'), foreground="#37c8fa")
+
+        # Configuración específica para botones
+        self.style.configure("TButton", 
+                        font=('Helvetica', 10),
+                        padding=5,
+                        background="#37c8fa",  # Color de fondo
+                        foreground="white",    # Color del texto (blanco para mejor contraste)
+                        borderwidth=1)
+
+        # Cambiar el color cuando el botón está presionado
+        self.style.map("TButton",
+                    background=[('pressed', '#2aa8d9'),  # Un tono más oscuro al presionar
+                                ('active', '#45d2ff')],   # Un tono más claro al pasar el mouse
+                    foreground=[('pressed', 'white'),
+                                ('active', 'white')])
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
+
+        # Configurar el estilo para los headers del Treeview
+        self.style.configure("Treeview.Heading",
+                        background="#3e1ad9",  # Color morado para los headers
+                        foreground="white",    # Texto blanco para mejor contraste
+                        font=('Helvetica', 10, 'bold'),
+                        padding=5,
+                        relief="flat")        # Sin relieve para un look moderno
+
+        # Configurar el hover para los headers
+        self.style.map("Treeview.Heading",
+                    background=[('active', '#5a36e0')],  # Color más claro al pasar el mouse
+                    relief=[('active', 'groove')])       # Efecto al pasar el mouse
         
+        # Configurar el estilo del Treeview en general
+        self.style.configure("Treeview",
+                        background="#ffffff",
+                        foreground="#333333",
+                        rowheight=25,
+                        fieldbackground="#ffffff")
+
+        # Alternar colores de filas para mejor legibilidad
+        self.style.map("Treeview",
+                    background=[('selected', '#3e1ad9')],  # Color selección
+                    foreground=[('selected', 'white')])
+                
         # Inicializar widgets que se actualizarán
         self.lbl_autos = None
         self.lbl_motos = None
