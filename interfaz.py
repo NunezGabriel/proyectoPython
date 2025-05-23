@@ -197,63 +197,53 @@ class TecsupParkingApp:
         self.style.configure("FormButton.TButton", font=('Helvetica', 10, 'bold'), padding=6)
         self.style.configure("FormRadio.TRadiobutton", font=('Helvetica', 10), padding=5)
         
-        # Frame principal con scroll
+        # Frame principal sin scroll (para permitir crecimiento automático)
         main_frame = ttk.Frame(parent, style="Form.TFrame")
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        # Contenedor con borde y padding
-        container = ttk.Frame(main_frame, style="Card.TFrame")
-        container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Configurar tamaño de la ventana principal (esto debe hacerse en la ventana raíz, no en el Notebook)
+        root = parent.winfo_toplevel()  # Obtenemos la ventana principal
+        root.minsize(900, 600)  # Tamaño mínimo inicial
+        root.geometry("1000x650")  # Tamaño inicial recomendado
+
+        # Contenedor principal con dos columnas
+        container = ttk.Frame(main_frame)
+        container.pack(fill=tk.BOTH, expand=True)
         
-        # Canvas y scrollbar
-        canvas = tk.Canvas(container, highlightthickness=0, bg="#ffffff")
-        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas, style="Card.TFrame")
-        
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True, padx=10, pady=10)
-        scrollbar.pack(side="right", fill="y", pady=10)
-        
-        # Contenido del formulario - Sección de Registro
-        form_frame = ttk.Frame(scrollable_frame, style="Card.TFrame", padding=20)
-        form_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
+        # Columna izquierda - Formulario
+        form_container = ttk.Frame(container, style="Card.TFrame", padding=20)
+        form_container.pack(side="left", fill="y", padx=(0, 20), pady=10)
+            
         # Título del formulario
-        ttk.Label(form_frame, 
+        ttk.Label(form_container, 
                 text=f"Registro de {tipo_vehiculo}", 
-                style="FormHeader.TLabel").grid(row=0, columnspan=2, pady=(0, 20), sticky="w")
+                style="FormHeader.TLabel").pack(anchor="w", pady=(0, 20))
         
         # Campos del formulario
-        row_counter = 1
+        fields_frame = ttk.Frame(form_container)
+        fields_frame.pack(fill="x")
+        
+        row_counter = 0
         
         # Nombre del Conductor
-        ttk.Label(form_frame, text="Nombre del Conductor:", style="FormLabel.TLabel").grid(
+        ttk.Label(fields_frame, text="Nombre del Conductor:", style="FormLabel.TLabel").grid(
             row=row_counter, column=0, padx=10, pady=8, sticky="e")
-        entry_nombre = ttk.Entry(form_frame, style="FormEntry.TEntry", width=30)
+        entry_nombre = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=30)
         entry_nombre.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
         row_counter += 1
         
         # DNI
-        ttk.Label(form_frame, text="DNI:", style="FormLabel.TLabel").grid(
+        ttk.Label(fields_frame, text="DNI:", style="FormLabel.TLabel").grid(
             row=row_counter, column=0, padx=10, pady=8, sticky="e")
-        entry_dni = ttk.Entry(form_frame, style="FormEntry.TEntry", width=20)
+        entry_dni = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=20)
         entry_dni.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
         row_counter += 1
         
         # Tipo de Usuario
-        ttk.Label(form_frame, text="Tipo de Usuario:", style="FormLabel.TLabel").grid(
+        ttk.Label(fields_frame, text="Tipo de Usuario:", style="FormLabel.TLabel").grid(
             row=row_counter, column=0, padx=10, pady=8, sticky="e")
         
-        user_type_frame = ttk.Frame(form_frame, style="Card.TFrame")
+        user_type_frame = ttk.Frame(fields_frame)
         user_type_frame.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
         
         tipo_usuario = tk.StringVar(value="estudiante")
@@ -265,51 +255,47 @@ class TecsupParkingApp:
         
         # Campos específicos del vehículo
         if tipo_vehiculo in ["Auto", "Moto"]:
-            ttk.Label(form_frame, text="Placa:", style="FormLabel.TLabel").grid(
+            ttk.Label(fields_frame, text="Placa:", style="FormLabel.TLabel").grid(
                 row=row_counter, column=0, padx=10, pady=8, sticky="e")
-            entry_placa = ttk.Entry(form_frame, style="FormEntry.TEntry", width=15)
+            entry_placa = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=15)
             entry_placa.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
             row_counter += 1
         
         # Marca
-        ttk.Label(form_frame, text="Marca:", style="FormLabel.TLabel").grid(
+        ttk.Label(fields_frame, text="Marca:", style="FormLabel.TLabel").grid(
             row=row_counter, column=0, padx=10, pady=8, sticky="e")
-        entry_marca = ttk.Entry(form_frame, style="FormEntry.TEntry", width=20)
+        entry_marca = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=20)
         entry_marca.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
         row_counter += 1
         
         # Color
-        ttk.Label(form_frame, text="Color:", style="FormLabel.TLabel").grid(
+        ttk.Label(fields_frame, text="Color:", style="FormLabel.TLabel").grid(
             row=row_counter, column=0, padx=10, pady=8, sticky="e")
-        entry_color = ttk.Entry(form_frame, style="FormEntry.TEntry", width=15)
+        entry_color = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=15)
         entry_color.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
         row_counter += 1
         
         # Campos adicionales según tipo de vehículo
         if tipo_vehiculo == "Moto":
-            ttk.Label(form_frame, text="Cilindrada (cc):", style="FormLabel.TLabel").grid(
+            ttk.Label(fields_frame, text="Cilindrada (cc):", style="FormLabel.TLabel").grid(
                 row=row_counter, column=0, padx=10, pady=8, sticky="e")
-            entry_cilindrada = ttk.Entry(form_frame, style="FormEntry.TEntry", width=10)
+            entry_cilindrada = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=10)
             entry_cilindrada.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
             row_counter += 1
         elif tipo_vehiculo == "Bicicleta":
-            ttk.Label(form_frame, text="Modelo:", style="FormLabel.TLabel").grid(
+            ttk.Label(fields_frame, text="Modelo:", style="FormLabel.TLabel").grid(
                 row=row_counter, column=0, padx=10, pady=8, sticky="e")
-            entry_modelo = ttk.Entry(form_frame, style="FormEntry.TEntry", width=20)
+            entry_modelo = ttk.Entry(fields_frame, style="FormEntry.TEntry", width=20)
             entry_modelo.grid(row=row_counter, column=1, padx=10, pady=8, sticky="w")
             row_counter += 1
         
-        # Botones de acción
-        btn_frame = ttk.Frame(form_frame, style="Card.TFrame")
-        btn_frame.grid(row=row_counter, columnspan=2, pady=(20, 10), sticky="e")
+        # Columna derecha - Tabla y botones
+        table_container = ttk.Frame(container, style="Card.TFrame", padding=20)
+        table_container.pack(side="left", fill="both", expand=True, pady=10)
         
-        ttk.Button(btn_frame, text="Volver al Menú", style="FormButton.TButton",
-                command=lambda: self.notebook.select(self.tab_menu)).pack(side="right", padx=5)
-        
-        ttk.Button(btn_frame, text="Registrar Salida", style="FormButton.TButton",
-                command=lambda: self.registrar_salida(
-                    entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else "BIC-" + entry_dni.get()[-4:]
-                )).pack(side="right", padx=5)
+        # Botones de acción encima de la tabla
+        btn_frame = ttk.Frame(table_container)
+        btn_frame.pack(fill="x", pady=(0, 15))
         
         ttk.Button(btn_frame, text="Registrar Entrada", style="FormButton.TButton",
                 command=lambda: self.registrar_entrada(
@@ -322,51 +308,69 @@ class TecsupParkingApp:
                     entry_color.get(),
                     entry_cilindrada.get() if tipo_vehiculo == "Moto" else None,
                     entry_modelo.get() if tipo_vehiculo == "Bicicleta" else None
-                )).pack(side="right", padx=5)
+                )).pack(side="left", padx=5)
         
-        # Sección de listado de vehículos
-        list_frame = ttk.Frame(scrollable_frame, style="Card.TFrame", padding=20)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+        ttk.Button(btn_frame, text="Registrar Salida", style="FormButton.TButton",
+                command=lambda: self.registrar_salida(
+                    entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else "BIC-" + entry_dni.get()[-4:]
+                )).pack(side="left", padx=5)
         
-        ttk.Label(list_frame, 
+        ttk.Button(btn_frame, text="Volver al Menú", style="FormButton.TButton",
+                command=lambda: self.notebook.select(self.tab_menu)).pack(side="right", padx=5)
+        
+        # Tabla de vehículos registrados
+        ttk.Label(table_container, 
                 text="Vehículos Registrados", 
-                style="FormHeader.TLabel").pack(anchor="w", pady=(0, 15))
+                style="FormHeader.TLabel").pack(anchor="w", pady=(0, 10))
         
         # Configurar Treeview según tipo de vehículo
         tree_style = ttk.Style()
         tree_style.configure("Treeview", font=('Helvetica', 10), rowheight=25)
         tree_style.configure("Treeview.Heading", font=('Helvetica', 10, 'bold'))
         
+        # Frame para la tabla con scroll
+        tree_frame = ttk.Frame(table_container)
+        tree_frame.pack(fill="both", expand=True)
+        
+        # Scrollbar vertical
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+        vsb.pack(side="right", fill="y")
+        
         if tipo_vehiculo == "Auto":
-            self.tree_autos = ttk.Treeview(list_frame, 
+            self.tree_autos = ttk.Treeview(tree_frame, 
                                         columns=("Placa", "Marca", "Color", "Conductor", "DNI", "Tipo"), 
-                                        show="headings", height=8, style="Treeview")
+                                        show="headings", height=12, style="Treeview", yscrollcommand=vsb.set)
             for col in ["Placa", "Marca", "Color", "Conductor", "DNI", "Tipo"]:
                 self.tree_autos.heading(col, text=col)
                 self.tree_autos.column(col, width=120, anchor="center")
-            self.tree_autos.pack(fill=tk.BOTH, expand=True)
+            self.tree_autos.pack(fill="both", expand=True)
             
         elif tipo_vehiculo == "Moto":
-            self.tree_motos = ttk.Treeview(list_frame, 
+            self.tree_motos = ttk.Treeview(tree_frame, 
                                         columns=("Placa", "Marca", "Color", "Conductor", "DNI", "Tipo", "Cilindrada"), 
-                                        show="headings", height=8, style="Treeview")
+                                        show="headings", height=12, style="Treeview", yscrollcommand=vsb.set)
             for col in ["Placa", "Marca", "Color", "Conductor", "DNI", "Tipo", "Cilindrada"]:
                 self.tree_motos.heading(col, text=col)
                 self.tree_motos.column(col, width=110, anchor="center")
-            self.tree_motos.pack(fill=tk.BOTH, expand=True)
+            self.tree_motos.pack(fill="both", expand=True)
             
         elif tipo_vehiculo == "Bicicleta":
-            self.tree_bicis = ttk.Treeview(list_frame, 
+            self.tree_bicis = ttk.Treeview(tree_frame, 
                                         columns=("ID", "Marca", "Color", "Conductor", "DNI", "Tipo", "Modelo"), 
-                                        show="headings", height=8, style="Treeview")
+                                        show="headings", height=12, style="Treeview", yscrollcommand=vsb.set)
             for col in ["ID", "Marca", "Color", "Conductor", "DNI", "Tipo", "Modelo"]:
                 self.tree_bicis.heading(col, text=col)
                 self.tree_bicis.column(col, width=110, anchor="center")
-            self.tree_bicis.pack(fill=tk.BOTH, expand=True)
+            self.tree_bicis.pack(fill="both", expand=True)
         
-        # Configurar grid para expansión uniforme
-        form_frame.columnconfigure(0, weight=1)
-        form_frame.columnconfigure(1, weight=3)
+        vsb.config(command=self.tree_autos.yview if tipo_vehiculo == "Auto" else 
+                self.tree_motos.yview if tipo_vehiculo == "Moto" else 
+                self.tree_bicis.yview)
+        
+        # Configurar expansión de la ventana
+        root = parent.winfo_toplevel()  # Obtenemos la ventana principal
+        root.minsize(1500, 800)  # Tamaño mínimo inicial
+        root.geometry("1000x650")  # Tamaño inicial recomendado
     
     def crear_tabla_reportes(self):
         # Frame principal
