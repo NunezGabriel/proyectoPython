@@ -335,7 +335,59 @@ class TecsupParkingApp:
         # Scrollbar vertical
         vsb = ttk.Scrollbar(tree_frame, orient="vertical")
         vsb.pack(side="right", fill="y")
+
+        # Función para manejar la selección de fila en la tabla
+        def on_row_select(event):
+            # Obtener el Treeview correspondiente
+            tree = None
+            if tipo_vehiculo == "Auto":
+                tree = self.tree_autos
+            elif tipo_vehiculo == "Moto":
+                tree = self.tree_motos
+            elif tipo_vehiculo == "Bicicleta":
+                tree = self.tree_bicis
+            
+            # Obtener el item seleccionado
+            selected_item = tree.selection()
+            if not selected_item:
+                return
+                
+            item_data = tree.item(selected_item, 'values')
+            
+            # Rellenar formulario con los datos de la fila seleccionada
+            if tipo_vehiculo in ["Auto", "Moto"]:
+                entry_placa.delete(0, tk.END)
+                entry_placa.insert(0, item_data[0])  # Placa
+                entry_marca.delete(0, tk.END)
+                entry_marca.insert(0, item_data[1])  # Marca
+                entry_color.delete(0, tk.END)
+                entry_color.insert(0, item_data[2])  # Color
+                entry_nombre.delete(0, tk.END)
+                entry_nombre.insert(0, item_data[3])  # Conductor
+                entry_dni.delete(0, tk.END)
+                entry_dni.insert(0, item_data[4])  # DNI
+                tipo_usuario.set("profesor" if item_data[5].lower() == "profesor" else "estudiante")  # Tipo usuario
+                
+                if tipo_vehiculo == "Moto":
+                    entry_cilindrada.delete(0, tk.END)
+                    if len(item_data) > 6:  # Asegurarse que hay cilindrada
+                        entry_cilindrada.insert(0, item_data[6])  # Cilindrada
+                    
+            elif tipo_vehiculo == "Bicicleta":
+                entry_marca.delete(0, tk.END)
+                entry_marca.insert(0, item_data[1])  # Marca
+                entry_color.delete(0, tk.END)
+                entry_color.insert(0, item_data[2])  # Color
+                entry_nombre.delete(0, tk.END)
+                entry_nombre.insert(0, item_data[3])  # Conductor
+                entry_dni.delete(0, tk.END)
+                entry_dni.insert(0, item_data[4])  # DNI
+                tipo_usuario.set("profesor" if item_data[5].lower() == "profesor" else "estudiante")  # Tipo usuario
+                entry_modelo.delete(0, tk.END)
+                if len(item_data) > 6:  # Asegurarse que hay modelo
+                    entry_modelo.insert(0, item_data[6])  # Modelo        
         
+        # Configurar Treeview según tipo de vehículo
         if tipo_vehiculo == "Auto":
             self.tree_autos = ttk.Treeview(tree_frame, 
                                         columns=("Placa", "Marca", "Color", "Conductor", "DNI", "Tipo"), 
@@ -344,6 +396,7 @@ class TecsupParkingApp:
                 self.tree_autos.heading(col, text=col)
                 self.tree_autos.column(col, width=120, anchor="center")
             self.tree_autos.pack(fill="both", expand=True)
+            self.tree_autos.bind("<ButtonRelease-1>", on_row_select)  # <-- Aquí el binding
             
         elif tipo_vehiculo == "Moto":
             self.tree_motos = ttk.Treeview(tree_frame, 
@@ -353,6 +406,7 @@ class TecsupParkingApp:
                 self.tree_motos.heading(col, text=col)
                 self.tree_motos.column(col, width=110, anchor="center")
             self.tree_motos.pack(fill="both", expand=True)
+            self.tree_motos.bind("<ButtonRelease-1>", on_row_select)  # <-- Aquí el binding
             
         elif tipo_vehiculo == "Bicicleta":
             self.tree_bicis = ttk.Treeview(tree_frame, 
@@ -362,6 +416,7 @@ class TecsupParkingApp:
                 self.tree_bicis.heading(col, text=col)
                 self.tree_bicis.column(col, width=110, anchor="center")
             self.tree_bicis.pack(fill="both", expand=True)
+            self.tree_bicis.bind("<ButtonRelease-1>", on_row_select)  # <-- Aquí el binding
         
         vsb.config(command=self.tree_autos.yview if tipo_vehiculo == "Auto" else 
                 self.tree_motos.yview if tipo_vehiculo == "Moto" else 
@@ -448,10 +503,32 @@ class TecsupParkingApp:
             messagebox.showerror("Error", f"Ocurrió un error: {str(e)}")
     
     def registrar_salida(self, placa):
+        # Si no se proporciona placa (campo vacío), verificar si hay selección en el Treeview
+        if not placa or placa.strip() == "":
+            # Determinar qué Treeview está activo según la pestaña actual
+            current_tab = self.notebook.tab(self.notebook.select(), "text")
+            
+            try:
+                if current_tab == "Gestión de Autos" and self.tree_autos.selection():
+                    selected_item = self.tree_autos.selection()[0]
+                    placa = self.tree_autos.item(selected_item, 'values')[0]
+                elif current_tab == "Gestión de Motos" and self.tree_motos.selection():
+                    selected_item = self.tree_motos.selection()[0]
+                    placa = self.tree_motos.item(selected_item, 'values')[0]
+                elif current_tab == "Gestión de Bicicletas" and self.tree_bicis.selection():
+                    selected_item = self.tree_bicis.selection()[0]
+                    placa = self.tree_bicis.item(selected_item, 'values')[0]
+            except:
+                pass
+        
+        if not placa or placa.strip() == "":
+            messagebox.showerror("Error", "No se ha seleccionado ningún vehículo")
+            return
+        
         vehiculo = self.parking.registrar_salida(placa)
         if vehiculo:
             pago = self.parking.calcular_pago(vehiculo)
-            mensaje = f"Vehículo {vehiculo.placa} registrado como salida.\n"
+            mensaje = f"Vehículo {vehiculo.placa if hasattr(vehiculo, 'placa') else 'BIC-' + vehiculo.conductor.dni[-4:]} registrado como salida.\n"
             mensaje += f"Conductor: {vehiculo.conductor.nombre}\n"
             mensaje += f"Tiempo estacionado: {round((vehiculo.hora_salida - vehiculo.hora_entrada)/60, 2)} minutos\n"
             
