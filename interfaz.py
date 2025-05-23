@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from vehiculo import Auto, Moto, Bicicleta
 from conductor import Conductor
 from parking import Parking
+from datetime import datetime
 
 class TecsupParkingApp:
     def __init__(self, root):
@@ -167,41 +168,56 @@ class TecsupParkingApp:
         btn_frame.grid(row=9, columnspan=2, pady=20)
         
         ttk.Button(btn_frame, text="Registrar Entrada", 
-                  command=lambda: self.registrar_entrada(
-                      tipo_vehiculo,
-                      entry_nombre.get(),
-                      entry_dni.get(),
-                      tipo_usuario.get(),
-                      entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else None,
-                      entry_marca.get(),
-                      entry_color.get(),
-                      entry_cilindrada.get() if tipo_vehiculo == "Moto" else None,
-                      entry_modelo.get() if tipo_vehiculo == "Bicicleta" else None
-                  )).grid(row=0, column=0, padx=5)
+                command=lambda: self.registrar_entrada(
+                    tipo_vehiculo,
+                    entry_nombre.get(),
+                    entry_dni.get(),
+                    tipo_usuario.get(),
+                    entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else None,
+                    entry_marca.get(),
+                    entry_color.get(),
+                    entry_cilindrada.get() if tipo_vehiculo == "Moto" else None,
+                    entry_modelo.get() if tipo_vehiculo == "Bicicleta" else None
+                )).grid(row=0, column=0, padx=5)
         
         ttk.Button(btn_frame, text="Registrar Salida", 
-                  command=lambda: self.registrar_salida(
-                      entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else "BIC-" + entry_dni.get()[-4:]
-                  )).grid(row=0, column=1, padx=5)
+                command=lambda: self.registrar_salida(
+                    entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else "BIC-" + entry_dni.get()[-4:]
+                )).grid(row=0, column=1, padx=5)
         
         ttk.Button(btn_frame, text="Volver al Menú", 
-                  command=lambda: self.notebook.select(self.tab_menu)).grid(row=0, column=2, padx=5)
+                command=lambda: self.notebook.select(self.tab_menu)).grid(row=0, column=2, padx=5)
         
         # Lista de vehículos
         ttk.Label(scrollable_frame, text="Vehículos Registrados:", style="Header.TLabel").grid(row=10, columnspan=2, pady=10)
         
-        # Usamos un Treeview para mostrar la información en formato tabla
-        columns = ("Placa", "Tipo", "Marca", "Color", "Conductor", "DNI", "Tipo Usuario")
-        self.tree = ttk.Treeview(scrollable_frame, columns=columns, show="headings", height=10)
-        
-        for col in columns:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=100, anchor="center")
-        
-        self.tree.grid(row=11, columnspan=2, padx=5, pady=5, sticky="nsew")
-        
-        # Actualizar la lista
-        self.actualizar_lista_vehiculos()
+        # Asignar Treeview específico para cada tipo de vehículo
+        if tipo_vehiculo == "Auto":
+            self.tree_autos = ttk.Treeview(scrollable_frame, 
+                                        columns=("Placa", "Marca", "Color", "Conductor", "DNI", "Tipo"), 
+                                        show="headings", height=8)
+            for col in ["Placa", "Marca", "Color", "Conductor", "DNI", "Tipo"]:
+                self.tree_autos.heading(col, text=col)
+                self.tree_autos.column(col, width=100)
+            self.tree_autos.grid(row=11, columnspan=2, padx=5, pady=5, sticky="nsew")
+            
+        elif tipo_vehiculo == "Moto":
+            self.tree_motos = ttk.Treeview(scrollable_frame, 
+                                        columns=("Placa", "Marca", "Color", "Conductor", "DNI", "Tipo", "Cilindrada"), 
+                                        show="headings", height=8)
+            for col in ["Placa", "Marca", "Color", "Conductor", "DNI", "Tipo", "Cilindrada"]:
+                self.tree_motos.heading(col, text=col)
+                self.tree_motos.column(col, width=100)
+            self.tree_motos.grid(row=11, columnspan=2, padx=5, pady=5, sticky="nsew")
+            
+        elif tipo_vehiculo == "Bicicleta":
+            self.tree_bicis = ttk.Treeview(scrollable_frame, 
+                                        columns=("ID", "Marca", "Color", "Conductor", "DNI", "Tipo", "Modelo"), 
+                                        show="headings", height=8)
+            for col in ["ID", "Marca", "Color", "Conductor", "DNI", "Tipo", "Modelo"]:
+                self.tree_bicis.heading(col, text=col)
+                self.tree_bicis.column(col, width=100)
+            self.tree_bicis.grid(row=11, columnspan=2, padx=5, pady=5, sticky="nsew")
     
     def crear_tabla_reportes(self):
         # Frame principal
@@ -256,9 +272,9 @@ class TecsupParkingApp:
             messagebox.showerror("Error", "La placa es obligatoria para autos y motos")
             return
             
-        conductor = Conductor(nombre, dni, tipo_usuario)
-        
         try:
+            conductor = Conductor(nombre, dni, tipo_usuario)
+            
             if tipo_vehiculo == "Auto":
                 vehiculo = Auto(placa, marca, color, conductor)
             elif tipo_vehiculo == "Moto":
@@ -270,6 +286,9 @@ class TecsupParkingApp:
                 messagebox.showinfo("Éxito", f"{tipo_vehiculo} registrado correctamente")
                 self.actualizar_lista_vehiculos()
                 self.actualizar_estado_parking()
+                self.actualizar_reportes()
+                # Forzar actualización de la interfaz
+                self.root.update_idletasks()
             else:
                 messagebox.showerror("Error", f"No hay espacio disponible para {tipo_vehiculo.lower()}s")
         except Exception as e:
@@ -296,21 +315,46 @@ class TecsupParkingApp:
             messagebox.showerror("Error", "Vehículo no encontrado")
     
     def actualizar_lista_vehiculos(self):
-        # Limpiar el treeview
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-            
-        # Agregar los vehículos actuales
+        # Obtener todos los Treeviews
+        trees = {
+            "Auto": getattr(self, "tree_autos", None),
+            "Moto": getattr(self, "tree_motos", None),
+            "Bicicleta": getattr(self, "tree_bicis", None),
+            "Reportes": getattr(self, "tree_reportes", None)
+        }
+        
+        # Limpiar todos los Treeviews
+        for tree in trees.values():
+            if tree:
+                for item in tree.get_children():
+                    tree.delete(item)
+        
+        # Insertar vehículos en los Treeviews correspondientes
         for vehiculo in self.parking.obtener_vehiculos():
-            self.tree.insert("", "end", values=(
-                vehiculo.placa,
-                vehiculo.tipo_vehiculo,
+            datos_base = (
+                vehiculo.placa if hasattr(vehiculo, "placa") else f"BIC-{vehiculo.conductor.dni[-4:]}",
                 vehiculo.marca,
                 vehiculo.color,
                 vehiculo.conductor.nombre,
                 vehiculo.conductor.dni,
                 "Profesor" if vehiculo.conductor.tipo == "profesor" else "Estudiante"
-            ))
+            )
+            
+            if vehiculo.tipo_vehiculo == "Auto" and trees["Auto"]:
+                trees["Auto"].insert("", "end", values=datos_base)
+                
+            elif vehiculo.tipo_vehiculo == "Moto" and trees["Moto"]:
+                datos_moto = datos_base + (vehiculo.cilindrada,)
+                trees["Moto"].insert("", "end", values=datos_moto)
+                
+            elif vehiculo.tipo_vehiculo == "Bicicleta" and trees["Bicicleta"]:
+                datos_bici = (f"BIC-{vehiculo.conductor.dni[-4:]}",) + datos_base[1:] + (vehiculo.modelo,)
+                trees["Bicicleta"].insert("", "end", values=datos_bici)
+            
+            # Insertar en reportes
+            if trees["Reportes"]:
+                hora_entrada = datetime.fromtimestamp(vehiculo.hora_entrada).strftime("%H:%M:%S") if vehiculo.hora_entrada else "N/A"
+                trees["Reportes"].insert("", "end", values=(vehiculo.tipo_vehiculo,) + datos_base + (hora_entrada,))
     
     def actualizar_estado_parking(self):
         estado = self.parking.obtener_estado()
