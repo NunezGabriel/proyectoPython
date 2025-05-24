@@ -642,6 +642,23 @@ class TecsupParkingApp:
         
         # Actualizar reportes inicial
         self.actualizar_reportes()
+
+    def limpiar_formulario(self, tipo_vehiculo, entry_nombre, entry_dni, tipo_usuario, entry_placa, entry_marca, entry_color, entry_cilindrada=None, entry_modelo=None):
+        """Limpia todos los campos del formulario"""
+        entry_nombre.delete(0, tk.END)
+        entry_dni.delete(0, tk.END)
+        entry_marca.delete(0, tk.END)
+        entry_color.delete(0, tk.END)
+        tipo_usuario.set("estudiante")  # Valor por defecto
+        
+        if tipo_vehiculo in ["Auto", "Moto"] and entry_placa:
+            entry_placa.delete(0, tk.END)
+        
+        if tipo_vehiculo == "Moto" and entry_cilindrada:
+            entry_cilindrada.delete(0, tk.END)
+        
+        if tipo_vehiculo == "Bicicleta" and entry_modelo:
+            entry_modelo.delete(0, tk.END)
     
     def registrar_entrada(self, tipo_vehiculo, nombre, dni, tipo_usuario, placa, marca, color, cilindrada=None, modelo=None):
         # Validación de campos
@@ -668,13 +685,17 @@ class TecsupParkingApp:
                 self.actualizar_lista_vehiculos()
                 self.actualizar_estado_parking()
                 self.actualizar_reportes()
+                
+                # Limpiar formulario después del registro exitoso
+                self.limpiar_formulario_actual(tipo_vehiculo)
+                
                 # Forzar actualización de la interfaz
                 self.root.update_idletasks()
             else:
                 messagebox.showerror("Error", f"No hay espacio disponible para {tipo_vehiculo.lower()}s")
         except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error: {str(e)}")
-    
+        
     def registrar_salida(self, placa):
         # Si no se proporciona placa (campo vacío), verificar si hay selección en el Treeview
         if not placa or placa.strip() == "":
@@ -714,9 +735,53 @@ class TecsupParkingApp:
             self.actualizar_lista_vehiculos()
             self.actualizar_estado_parking()
             self.actualizar_reportes()
+            
+            # Limpiar formulario después del registro de salida exitoso
+            current_tab = self.notebook.tab(self.notebook.select(), "text")
+            if current_tab == "Gestión de Autos":
+                self.limpiar_formulario_actual("Auto")
+            elif current_tab == "Gestión de Motos":
+                self.limpiar_formulario_actual("Moto")
+            elif current_tab == "Gestión de Bicicletas":
+                self.limpiar_formulario_actual("Bicicleta")
         else:
             messagebox.showerror("Error", "Vehículo no encontrado")
-    
+            
+    def limpiar_formulario_actual(self, tipo_vehiculo):
+        """Limpia el formulario de la pestaña activa"""
+        # Obtener referencias a los widgets del formulario activo
+        if tipo_vehiculo == "Auto":
+            tab = self.tab_autos
+        elif tipo_vehiculo == "Moto":
+            tab = self.tab_motos
+        elif tipo_vehiculo == "Bicicleta":
+            tab = self.tab_bicis
+        else:
+            return
+        
+        # Buscar y limpiar todos los Entry widgets en la pestaña
+        for widget in tab.winfo_children():
+            self._limpiar_entries_recursivo(widget)
+
+    def _limpiar_entries_recursivo(self, widget):
+        """Función auxiliar para limpiar Entry widgets recursivamente"""
+        if isinstance(widget, ttk.Entry):
+            widget.delete(0, tk.END)
+        elif hasattr(widget, 'winfo_children'):
+            for child in widget.winfo_children():
+                self._limpiar_entries_recursivo(child)
+        
+        # También limpiar radiobuttons
+        if hasattr(widget, 'winfo_children'):
+            for child in widget.winfo_children():
+                if isinstance(child, ttk.Frame):
+                    for subchild in child.winfo_children():
+                        if isinstance(subchild, tk.StringVar):
+                            try:
+                                subchild.set("estudiante")
+                            except:
+                                pass
+
     def actualizar_lista_vehiculos(self):
         # Obtener todos los Treeviews
         trees = {
