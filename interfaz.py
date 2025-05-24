@@ -187,6 +187,50 @@ class TecsupParkingApp:
         cards_frame.grid_rowconfigure(0, weight=1)
         cards_frame.grid_rowconfigure(1, weight=1)
 
+    def filtrar_por_conductor(self, tipo_vehiculo, nombre_buscar):
+        """Filtra la tabla por nombre del conductor"""
+        # Obtener el tree correspondiente
+        if tipo_vehiculo == "Auto":
+            tree = self.tree_autos
+        elif tipo_vehiculo == "Moto":
+            tree = self.tree_motos
+        elif tipo_vehiculo == "Bicicleta":
+            tree = self.tree_bicis
+        else:
+            return
+
+        # Limpiar la tabla
+        for item in tree.get_children():
+            tree.delete(item)
+
+        # Obtener todos los vehículos del tipo correspondiente
+        vehiculos_filtrados = [v for v in self.parking.obtener_vehiculos() 
+                             if v.tipo_vehiculo == tipo_vehiculo]
+
+        # Si hay texto de búsqueda, filtrar por nombre del conductor
+        if nombre_buscar.strip():
+            vehiculos_filtrados = [v for v in vehiculos_filtrados 
+                                 if nombre_buscar.lower() in v.conductor.nombre.lower()]
+
+        # Mostrar vehículos filtrados
+        for vehiculo in vehiculos_filtrados:
+            datos_base = (
+                vehiculo.placa if hasattr(vehiculo, "placa") else f"BIC-{vehiculo.conductor.dni[-4:]}",
+                vehiculo.marca,
+                vehiculo.color,
+                vehiculo.conductor.nombre,
+                vehiculo.conductor.dni,
+                "Profesor" if vehiculo.conductor.tipo == "profesor" else "Estudiante"
+            )
+            
+            if tipo_vehiculo == "Auto":
+                tree.insert("", "end", values=datos_base)
+            elif tipo_vehiculo == "Moto":
+                datos_moto = datos_base + (vehiculo.cilindrada,)
+                tree.insert("", "end", values=datos_moto)
+            elif tipo_vehiculo == "Bicicleta":
+                datos_bici = (f"BIC-{vehiculo.conductor.dni[-4:]}",) + datos_base[1:] + (vehiculo.modelo,)
+                tree.insert("", "end", values=datos_bici)
              
     def crear_formulario_vehiculo(self, parent, tipo_vehiculo):
         # Configurar estilos para el formulario
@@ -293,9 +337,29 @@ class TecsupParkingApp:
         table_container = ttk.Frame(container, style="Card.TFrame", padding=20)
         table_container.pack(side="left", fill="both", expand=True, pady=10)
         
-        # Botones de acción encima de la tabla
-        btn_frame = ttk.Frame(table_container)
-        btn_frame.pack(fill="x", pady=(0, 15))
+        # Frame para buscador y botones
+        search_btn_frame = ttk.Frame(table_container)
+        search_btn_frame.pack(fill="x", pady=(0, 15))
+        
+        # Buscador
+        search_frame = ttk.Frame(search_btn_frame)
+        search_frame.pack(side="left", fill="x", expand=True)
+        
+        ttk.Label(search_frame, text="🔍 Buscar por conductor:", 
+                 style="FormLabel.TLabel").pack(side="left", padx=(0, 5))
+        entry_buscar = ttk.Entry(search_frame, style="FormEntry.TEntry", width=25)
+        entry_buscar.pack(side="left", padx=(0, 10))
+        
+        # Función para buscar en tiempo real
+        def on_search_change(*args):
+            self.filtrar_por_conductor(tipo_vehiculo, entry_buscar.get())
+        
+        # Vincular la búsqueda al cambio de texto
+        entry_buscar.bind('<KeyRelease>', on_search_change)
+        
+        # Botones de acción
+        btn_frame = ttk.Frame(search_btn_frame)
+        btn_frame.pack(side="right")
         
         ttk.Button(btn_frame, text="Registrar Entrada", style="FormButton.TButton",
                 command=lambda: self.registrar_entrada(
@@ -308,15 +372,15 @@ class TecsupParkingApp:
                     entry_color.get(),
                     entry_cilindrada.get() if tipo_vehiculo == "Moto" else None,
                     entry_modelo.get() if tipo_vehiculo == "Bicicleta" else None
-                )).pack(side="left", padx=5)
+                )).pack(side="left", padx=2)
         
         ttk.Button(btn_frame, text="Registrar Salida", style="FormButton.TButton",
                 command=lambda: self.registrar_salida(
                     entry_placa.get() if tipo_vehiculo in ["Auto", "Moto"] else "BIC-" + entry_dni.get()[-4:]
-                )).pack(side="left", padx=5)
+                )).pack(side="left", padx=2)
         
         ttk.Button(btn_frame, text="Volver al Menú", style="FormButton.TButton",
-                command=lambda: self.notebook.select(self.tab_menu)).pack(side="right", padx=5)
+                command=lambda: self.notebook.select(self.tab_menu)).pack(side="left", padx=2)
         
         # Tabla de vehículos registrados
         ttk.Label(table_container, 
