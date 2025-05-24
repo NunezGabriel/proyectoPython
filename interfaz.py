@@ -74,40 +74,52 @@ class TecsupParkingApp:
         self.crear_interfaz()
 
 
-    
     def crear_interfaz(self):
-        # Notebook (pestañas)
+        # Notebook (pestañas) - NO MOSTRAR
         self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # COMENTADA: self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Pestaña de Menú Principal
-        self.tab_menu = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_menu, text="Menú Principal")
+        self.tab_menu = ttk.Frame(self.root)
+        self.tab_menu.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.crear_menu_principal()
         
         # Pestaña para Autos
-        self.tab_autos = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_autos, text="Gestión de Autos")
+        self.tab_autos = ttk.Frame(self.root)
         self.crear_formulario_vehiculo(self.tab_autos, "Auto")
         
         # Pestaña para Motos
-        self.tab_motos = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_motos, text="Gestión de Motos")
+        self.tab_motos = ttk.Frame(self.root)
         self.crear_formulario_vehiculo(self.tab_motos, "Moto")
         
         # Pestaña para Bicicletas
-        self.tab_bicis = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_bicis, text="Gestión de Bicicletas")
+        self.tab_bicis = ttk.Frame(self.root)
         self.crear_formulario_vehiculo(self.tab_bicis, "Bicicleta")
         
         # Pestaña de Reportes
-        self.tab_reportes = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_reportes, text="Reportes")
+        self.tab_reportes = ttk.Frame(self.root)
         self.crear_tabla_reportes()
         
-        # Mostrar primero el menú principal
-        self.notebook.select(self.tab_menu)
     
+    def mostrar_vista(self, vista):
+        """Función para cambiar entre vistas ocultando/mostrando frames"""
+        # Ocultar todas las vistas
+        vistas = [self.tab_menu, self.tab_autos, self.tab_motos, self.tab_bicis, self.tab_reportes]
+        for v in vistas:
+            v.pack_forget()
+        
+        # Mostrar la vista solicitada
+        if vista == "menu":
+            self.tab_menu.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        elif vista == "autos":
+            self.tab_autos.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        elif vista == "motos":
+            self.tab_motos.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        elif vista == "bicis":
+            self.tab_bicis.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        elif vista == "reportes":
+            self.tab_reportes.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
     def crear_menu_principal(self):
         # Frame principal con nuevo diseño
         main_frame = ttk.Frame(self.tab_menu, style="TFrame")
@@ -145,16 +157,16 @@ class TecsupParkingApp:
                             foreground="white", 
                             font=('Helvetica', 10, 'bold'))
 
-        # Datos de las cards
+        # Datos de las cards - COMANDOS CAMBIADOS
         cards_data = [
             ("Gestión de Autos", "Administra el ingreso y salida de autos del estacionamiento.",
-            lambda: self.notebook.select(self.tab_autos)),
+            lambda: self.mostrar_vista("autos")),
             ("Gestión de Motos", "Controla las motocicletas que ingresan y salen del recinto.",
-            lambda: self.notebook.select(self.tab_motos)),
+            lambda: self.mostrar_vista("motos")),
             ("Gestión de Bicicletas", "Gestiona el parqueo de bicicletas con registro y control.",
-            lambda: self.notebook.select(self.tab_bicis)),
-            ("Ver Reportes", "Consulta los reportes de uso del estacionamiento por tipo de vehículo.",
-            lambda: self.notebook.select(self.tab_reportes))
+            lambda: self.mostrar_vista("bicis")),
+            ("Informacion General", "Consulta los reportes de uso del estacionamiento por tipo de vehículo.",
+            lambda: self.mostrar_vista("reportes"))
         ]
 
         for i, (titulo, desc, comando) in enumerate(cards_data):
@@ -168,18 +180,14 @@ class TecsupParkingApp:
             tk.Label(inner, text=titulo, font=('Helvetica', 12, 'bold'), bg="#ffffff", fg="#333333").pack(anchor="w")
             tk.Label(inner, text=desc, font=('Helvetica', 9), bg="#ffffff", fg="#777777", wraplength=180, justify='left').pack(anchor="w", pady=(5, 15))
             
-            tk.Button(inner, text="Acceder", bg="#33ccff", fg="white", font=("Helvetica", 9, 'bold'),
-                    relief='flat', cursor="hand2", command=comando).pack(anchor="e", pady=(10, 0))
+            tk.Button(inner, text="Acceder", bg="#33ccff", fg="white", font=("Helvetica", 10, 'bold'),
+                    relief='flat', cursor="hand2", command=comando,
+                    padx=10, pady=5).pack(anchor="e", pady=(10, 0))
+
 
         # Estado del parking
         estado_frame = ttk.Frame(main_frame)
         estado_frame.pack(pady=(30, 10))
-
-        ttk.Label(estado_frame, 
-                text=f"Autos: {self.parking.ocupados_autos}/{self.parking.capacidad_autos} | "
-                    f"Motos: {self.parking.ocupados_motos}/{self.parking.capacidad_motos} | "
-                    f"Bicicletas: {self.parking.ocupados_bicis}/{self.parking.capacidad_bicis}",
-                font=('Helvetica', 10)).pack()
 
         # Configurar grid para expansión uniforme
         cards_frame.grid_columnconfigure(0, weight=1)
@@ -380,7 +388,7 @@ class TecsupParkingApp:
                 )).pack(side="left", padx=2)
         
         ttk.Button(btn_frame, text="Volver al Menú", style="FormButton.TButton",
-                command=lambda: self.notebook.select(self.tab_menu)).pack(side="left", padx=2)
+                command=lambda: self.mostrar_vista("menu")).pack(side="left", padx=2)
         
         # Tabla de vehículos registrados
         ttk.Label(table_container, 
@@ -498,7 +506,7 @@ class TecsupParkingApp:
         
         # Título principal con nuevo estilo
         ttk.Label(main_frame, 
-                text="Reporte de Vehículos", 
+                text="Informacion General", 
                 style="Header.TLabel",
                 font=('Helvetica', 18, 'bold')).pack(pady=(0, 15))
         
@@ -628,7 +636,7 @@ class TecsupParkingApp:
         ttk.Button(button_frame, 
                 text="← Volver al Menú", 
                 style="TButton",
-                command=lambda: self.notebook.select(self.tab_menu)).pack(side="right", padx=5)
+                command=lambda: self.mostrar_vista("menu")).pack(side="right", padx=5)
         
         # Configurar estilos adicionales para los botones
         self.style.configure("Accent.TButton",
